@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 名空间，对应当前dao的全限定了类名-->
+<mapper namespace="com.qf.dao.TeacherManyToManyMapper">
+
+    <!-- 建立多对多的关系映射-->
+    <resultMap id="BaseResultMany" type="teacher">
+        <id property="tid" column="t_id"></id>
+        <result property="teacherName" column="teacher_name"></result>
+        <result property="age" column="age"></result>
+        <result property="address" column="address"></result>
+
+        <!-- 多对多关系-->
+        <collection property="classesList" ofType="classes">
+            <id property="cid" column="c_id"></id>
+            <result property="className" column="class_name"></result>
+            <result property="teacher" column="teacher"></result>
+        </collection>
+    </resultMap>
+
+    <!--查询-->
+    <select id="findAll" resultMap="BaseResultMany">
+        select t.*, c.class_name, c.teacher from tc_con tc, teacher t, classes c where tc.t_id = t.t_id and tc.c_id = c.c_id
+    </select>
+
+    <select id="findById" resultMap="BaseResultMany">
+        select t.*, c.class_name,c.teacher from teacher t, classes c where t.t_id = c.teacher and t.t_id = #{arg0}
+    </select>
+</mapper>

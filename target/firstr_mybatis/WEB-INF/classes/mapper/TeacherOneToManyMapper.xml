@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 名空间，对应当前dao的全限定了类名-->
+<mapper namespace="com.qf.dao.TeacherOneToManyMapper">
+
+    <!--一对一映射关系-->
+    <resultMap id="BaseResultOne" type="teacher">
+        <id property="tid" column="t_id"></id>
+        <result property="teacherName" column="teacher_name"></result>
+        <result property="age" column="age"></result>
+        <result property="address" column="address"></result>
+
+        <association property="classesList" javaType="classes">
+            <!-- 两个表的id不能重复，必须要给别名，否则只能查询出一个数据-->
+            <id property="cid" column="c_id"></id>
+            <result property="className" column="class_name"></result>
+            <result property="teacher" column="teacher"></result>
+        </association>
+    </resultMap>
+    <!-- 建立一对多的映射关系-->
+    <resultMap id="BaseResult" type="teacher">
+        <id property="tid" column="t_id"></id>
+        <result property="teacherName" column="teacher_name"></result>
+        <result property="age" column="age"></result>
+        <result property="address" column="address"></result>
+        <!--
+            property 一对多中的实体类属性名
+            ofType 属性的全限定类名
+        -->
+        <collection property="classesList" ofType="classes">
+            <!-- 两个表的id不能重复，必须要给别名，否则只能查询出一个数据-->
+            <id property="cid" column="c_id"></id>
+            <result property="className" column="class_name"></result>
+            <result property="teacher" column="teacher"></result>
+        </collection>
+    </resultMap>
+    
+    <resultMap id="selectByField" type="teacher">
+        <id property="tid" column="t_id"></id>
+        <result property="teacherName" column="teacher-name"></result>
+        <result property="age" column="age"></result>
+        <result property="address" column="address"></result>
+    </resultMap>
+
+    <!--<select id="findByTeacherId" resultMap="BaseResult">
+        select * from teacher where t_id = #{tid}
+    </select>-->
+
+    <select id="findById" resultMap="BaseResult">
+        select t.*, c.c_id, c.class_name, c.teacher from teacher t, classes c where t.t_id = c.teacher and t_id = #{tid}
+    </select>
+
+    <!-- 动态sql-->
+    <sql id="dataTable">
+        t_id, teacher_name, age, address
+    </sql>
+    <!-- 一、将数据表的字段放置在sql标签中，其他标签使用时，直接引入即可， id就是当前SQL的唯一标识-->
+    <select id="findByTeacherId" resultMap="BaseResultOne">
+        select <include refid="dataTable"/>
+        from teacher where t_id = #{arg0}
+    </select>
+    <!-- 二、if动态 判空，set： trim标签自动帮我们生成set-->
+    <update id="update" parameterType="teacher">
+        update teacher
+        <trim prefix="set" suffixOverrides=",">
+            <if test="teacherName != null">
+                teacher_name = #{teacherName}
+            </if>
+            <if test="age != null">
+                age = #{age}
+            </if>
+            <if test="address != null">
+                address = #{address}
+            </if>
+            <if test="classesList != null">
+                classesList = #{classesList}
+            </if>
+        </trim>
+        where t_id = #{tid}
+    </update>
+
+    <delete id="delete">
+        delete from teacher where t_id = #{arg0}
+    </delete>
+
+    <insert id="insertTeacher" parameterType="teacher">
+        insert into teacher (teacher_name, age, address) values (#{teacherName}, #{age}, #{address})
+    </insert>
+
+    <!--trim标签prefix属性自动帮我们加入where
+        prefixOverrides 自动替换and | or  前缀
+        suffixOverrides 后缀
+    -->
+    <select id="selectByField" parameterType="teacher" resultMap="selectByField">
+        select <include refid="dataTable"/> from teacher
+        <trim prefix="where" prefixOverrides="and|or">
+            <if test="teacherName != null">
+                and teacher_name = #{teacherName}
+            </if>
+            <if test="age != 0">
+                and age = #{age}
+            </if>
+            <if test="address != null">
+                and address like concat('%',#{address},'%')
+            </if>
+        </trim>
+    </select>
+</mapper>
